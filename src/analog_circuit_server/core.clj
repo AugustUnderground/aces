@@ -48,13 +48,11 @@
         sizing (reduce (fn [m i] 
                       (cons (into {} (map (fn [p] [p (-> params (get p) (get i))]) 
                                           (keys params)))
-                        m)) 
-                     [] (range len))
-        performances (map (partial run-sim amp) sizing)
-        results (reduce (fn [l r]
-                          (map (fn [[p v]] (update l p #(into [v] %))) r))
-                        (first performances) 
-                        (rest performances))
+                            m)) [] (range len))
+        performances (map (fn [s] (run-sim amp s)) sizing)
+        results (reduce (fn [l r] (merge-with cons r l))
+                        (zipmap (keys (first performances)) (repeat [])) 
+                        performances)
         body (json/write-str results)
         status 200]
     {:status status 
