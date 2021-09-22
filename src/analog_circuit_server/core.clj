@@ -1,5 +1,6 @@
 (ns analog-circuit-server.core
-  (:require [org.httpkit.server :refer [run-server]]
+  (:require ;[org.httpkit.server :refer [run-server server-stop!]]
+            [org.httpkit.server :as hk]
             [compojure.core :refer [GET POST routes]]
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-params]]
@@ -67,13 +68,29 @@
         headers {"Content-Type" "application/json; charset=utf-8"}]
     {:status status :headers headers :body body}))
 
+;; Graceful exit function
+(defn stop-server [amp srv]
+  (clojure.core/shutdown-agents)
+  (println "Stopping server ...")
+  (srv)
+  (println "Stopping spectre session ...")
+  (println (type amp))
+  (.stop amp)
+  (println "Shutting down ..."))
+
 ;; Server setup
 (defn start-server [port amp]
-  (let [routing (routes (POST "/sim" {params :params} (on-sim-req amp params))
-                        (GET "/random" {} (on-rng-req amp))
-                        (route/not-found {:status 404 :body "Not found"}))]
-    (run-server (-> routing (wrap-json-params)) {:port port})
-    (println "Server started on Port" port)))
+  (let [routing (-> (routes (POST "/sim" {params :params} (on-sim-req amp params))
+                            (GET "/random" {} (on-rng-req amp))
+                            (route/not-found {:status 404 :body "Not found"}))
+                    (wrap-json-params))
+        server-opts {:port port
+                     :thread 25
+                     :worker-name-prefix "acl-worker-"
+                     :server-header "acl-server"
+                     :legacy-return-value true
+                     #_/ } ]
+    (hk/run-server routing server-opts)))
 
 (defn -main [& args]
   (let [opts (-> args (parse-opts cli-options) (get :options)) 
@@ -83,6 +100,11 @@
         ckt  (get opts :ckt)
         op-id (get opts :op)
         amp (cond (= op-id 1) (mk-op1 sim pdk ckt)
-                  (= op-id 2) (mk-op2 sim pdk ckt))]
-    (.start amp)
-    (start-server port amp)))
+                  (= op-id 2) (mk-op2 sim pdk ckt))
+        _ (.start amp)
+        srv (start-server port amp)]
+    (println "Server started on Port" port)
+    (println "Press ENTER for graceful exit.")
+    (read-line)
+    (stop-server amp srv)
+    (System/exit 0)))
