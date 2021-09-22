@@ -40,10 +40,16 @@ Server started on Port XXXX
 Then, in another terminal:
 
 ```bash
-$ curl -X GET localhost:XXXX/rng/op1    # Generates random sizing
+# Generate random sizing for OP1
+$ curl -X GET localhost:XXXX/rng/op1
 
-$ curl -X POST localhost:XXXX/sim/op2   # Simulates the current state
+# Simulate the current state of OP2
+$ curl -X POST localhost:XXXX/sim/op2 -H 'Content-Type: application/json' -d '{}'
 ```
+
+The POST request to `sim/op#` has to be of type `application/json`. If it's
+empty, the current state of the circuit will be simulated. These results are
+**not** cached on the server. Each request will be simulated again.
 
 ## Usage
 
