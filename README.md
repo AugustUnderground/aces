@@ -40,9 +40,9 @@ Server started on Port XXXX
 Then, in another terminal:
 
 ```bash
-$ curl -X GET localhost:XXXX/random     # Generates random sizing
+$ curl -X GET localhost:XXXX/rng/op1    # Generates random sizing
 
-$ curl -X POST localhost:8888/sim       # Simulates the current state
+$ curl -X POST localhost:XXXX/sim/op2   # Simulates the current state
 ```
 
 ## Usage
@@ -67,7 +67,7 @@ The following will simulate the circuit for the three given sizing combinations
 and returns a JSON header with the corresponding simulation results.
 
 ```bash
-$ curl -X POST localhost:8888/sim -H 'Content-Type: application/json' \
+$ curl -X POST localhost:8888/sim/op1 -H 'Content-Type: application/json' \
        -d '{"Wd": [2e-6, 3e-6, 4e-6], "Ld": [2e-6, 3e-6, 4e-6]}' | jq
 ```
 

@@ -68,21 +68,19 @@
         headers {"Content-Type" "application/json; charset=utf-8"}]
     {:status status :headers headers :body body}))
 
-;; Graceful exit function
-(defn stop-server [amp srv]
-  (clojure.core/shutdown-agents)
-  (println "Stopping server ...")
-  (srv)
-  (println "Stopping spectre session ...")
-  (println (type amp))
-  (.stop amp)
-  (println "Shutting down ..."))
-
 ;; Server setup
-(defn start-server [port amp]
-  (let [routing (-> (routes (POST "/sim" {params :params} (on-sim-req amp params))
-                            (GET "/random" {} (on-rng-req amp))
-                            (route/not-found {:status 404 :body "Not found"}))
+(defn start-server [port amps]
+  (let [route-list (concat (flatten (map (fn [[id amp]] 
+                                  [ (POST (str "/sim/" id)  
+                                          {params :params}
+                                          (on-sim-req amp params))
+                                    (GET (str "/rng/" id) {} 
+                                         (on-rng-req amp))
+                                  #_/ ])
+                                amps))
+                           [(route/not-found {:status 404 :body "Not found"})])
+        routing (-> routes 
+                    (apply route-list)
                     (wrap-json-params))
         server-opts {:port port
                      :thread 25
@@ -92,19 +90,27 @@
                      #_/ } ]
     (hk/run-server routing server-opts)))
 
+;; Kill all sessions and stop server
+(defn stop-server [amps srvr]
+  (clojure.core/shutdown-agents)
+  (println "Stopping spectre sessions ...")
+  (map #(.stop %) amps)
+  (println "Stopping server ...")
+  (srvr))
+
 (defn -main [& args]
   (let [opts (-> args (parse-opts cli-options) (get :options)) 
         port (get opts :port)
         pdk  (get opts :tech)
         sim  (get opts :sim)
         ckt  (get opts :ckt)
-        op-id (get opts :op)
-        amp (cond (= op-id 1) (mk-op1 sim pdk ckt)
-                  (= op-id 2) (mk-op2 sim pdk ckt))
-        _ (.start amp)
-        srv (start-server port amp)]
+        amps {"op1" (mk-op1 sim pdk ckt)
+              "op2" (mk-op2 sim pdk ckt)}
+        _ (->> amps (vals) (map #(.start %)) (doall))
+        srvr (start-server port amps)]
     (println "Server started on Port" port)
     (println "Press ENTER for graceful exit.")
     (read-line)
-    (stop-server amp srv)
+    (stop-server amps srvr)
+    (println "Shutting down ...")
     (System/exit 0)))
