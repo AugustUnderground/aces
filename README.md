@@ -12,6 +12,8 @@ universe.
 - [analog-circuit-library](https://gitlab-forschung.reutlingen-university.de/schweikm/analog-circuit-library)
 - clojure >= 1.10.3
 
+Optional: [jq](https://stedolan.github.io/jq/) to view the responses.
+
 ### Setup
 
 To generate `pom.xml`:
@@ -23,8 +25,11 @@ $ lein install
 ## Getting Started
 
 ```bash
-$ lein run --tech <tech> --ckt <ckt>
+$ lein trampoline run --tech <tech> --ckt <ckt>
 ```
+
+**NOTE**: `trampoline` is required for graceful exit. (see 
+[this answer](https://stackoverflow.com/a/10863953))
 
 If all went well it should say:
 
@@ -61,10 +66,8 @@ The following will simulate the circuit for the three given sizing combinations
 and returns a JSON header with the corresponding simulation results.
 
 ```bash
-$ curl -X POST localhost:8888/sim \
-       -H 'Content-Type: application/json' \
-       -d '{ "Wd": [3e-6, 2.5e-6, 2e-6] \
-           , "Ld": [3e-6, 2.5e-6, 2e-6] }
+$ curl -X POST localhost:8888/sim -H 'Content-Type: application/json' \
+       -d '{"Wd": [2e-6, 3e-6, 4e-6], "Ld": [2e-6, 3e-6, 4e-6]}' | jq
 ```
 
 ## License
