@@ -62,6 +62,14 @@
      :headers headers 
      :body body}))
 
+;; Retrieve available parameters
+(defn on-param-req [amp]
+  (let [body {"parameters" (into [] (.getParameterIdentifiers amp))}
+        status 200
+        headers {"Content-Type" "application/json; charset=utf-8"}]
+    {:status status :headers headers 
+     :body (json/write-str body)}))
+
 ;; Retrieve random sizing
 (defn on-rng-req [amp]
   (let [random-sizing (into {} (.getRandomValues amp))
@@ -78,6 +86,8 @@
                                           (on-sim-req amp params))
                                     (GET (str "/rng/" id) {} 
                                          (on-rng-req amp))
+                                    (GET (str "/params/" id) {} 
+                                         (on-param-req amp))
                                   #_/ ])
                                 amps))
                            [(route/not-found {:status 404 :body "Not found"})])

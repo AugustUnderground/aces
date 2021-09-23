@@ -1,6 +1,6 @@
-# analog-circuit-server
+# Analog Circuit Server
 
-Gives HTTP access to
+REST API for
 [analog-circuit-library](https://gitlab-forschung.reutlingen-university.de/schweikm/analog-circuit-library).
 Simulate and characterize Operational Amplifiers from anywhere in the ~~world~~
 universe.
@@ -12,7 +12,8 @@ universe.
 - [analog-circuit-library](https://gitlab-forschung.reutlingen-university.de/schweikm/analog-circuit-library)
 - clojure >= 1.10.3
 
-Optional: [jq](https://stedolan.github.io/jq/) to view the responses.
+**Optional**: [curl](https://curl.se/) and [jq](https://stedolan.github.io/jq/)
+to send and receive from the command line.
 
 ### Setup
 
@@ -40,11 +41,7 @@ Server started on Port XXXX
 Then, in another terminal:
 
 ```bash
-# Generate random sizing for OP1
 $ curl -X GET localhost:XXXX/rng/op1
-
-# Simulate the current state of OP2
-$ curl -X POST localhost:XXXX/sim/op2 -H 'Content-Type: application/json' -d '{}'
 ```
 
 The POST request to `sim/op#` has to be of type `application/json`. If it's
@@ -72,10 +69,45 @@ value is to be simulated, it should be in a singleton list.
 The following will simulate the circuit for the three given sizing combinations
 and returns a JSON header with the corresponding simulation results.
 
+## Routes
+
+Three routes are supported as of now.
+
+### Available Sizing Parameters
+
+To get a list of available parameters send a `GET` request to `params/op#`:
+
+```bash
+$ curl -X GET localhost:XXXX/params/op2 | jq
+```
+
+### Random Sizing
+
+To get random and legal sizing parameters send a `GET` request to `rng/op#`:
+
+```bash
+$ curl -X GET localhost:XXXX/rng/op1 | jq
+```
+
+### Simulation
+
+To simulate the current netlist send an **empty** `POST` request to `sim/op#`:
+
+```bash
+$ curl -X POST localhost:XXXX/sim/op2 \
+    -H 'Content-Type: application/json' -d '{}' | jq
+```
+
+To simulate a different set of parameters send them as JSON:
+
 ```bash
 $ curl -X POST localhost:8888/sim/op1 -H 'Content-Type: application/json' \
        -d '{"Wd": [2e-6, 3e-6, 4e-6], "Ld": [2e-6, 3e-6, 4e-6]}' | jq
 ```
+
+The lists of values for each parameter should be equal, for this example 3
+simulations would be run with the corresponding sizing and return a JSON object
+where each performance parameter has a list of equal length (3 in this case).
 
 ## License
 
