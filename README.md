@@ -12,7 +12,8 @@ universe.
 - [analog-circuit-library](https://gitlab-forschung.reutlingen-university.de/schweikm/analog-circuit-library)
 - clojure >= 1.10.3
 
-**Optional**: [curl](https://curl.se/) and [jq](https://stedolan.github.io/jq/)
+**Optional**: [curl](https://curl.se/), [jq](https://stedolan.github.io/jq/)
+and [gron](https://github.com/tomnomnom/gron)
 to send and receive from the command line.
 
 ### Setup
