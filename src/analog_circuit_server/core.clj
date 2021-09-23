@@ -95,10 +95,23 @@
         status 200
         headers {"Content-Type" "application/json; charset=utf-8"}]
     (when vrbs
-      (println "Parameters:")
+      (println "Random Parameters:")
       (println random-sizing))
     {:status status :headers headers 
      :body (json/write-str random-sizing)}))
+
+;; Request curated initial sizing parameters
+(defn on-init-req [amp vrbs]
+  (when vrbs
+    (println "Recevied Initial Parameter Request for " amp ":"))
+  (let [initial-sizing (into {} (.getInitValues amp))
+        status 200
+        headers {"Content-Type" "application/json; charset=utf-8"}]
+    (when vrbs
+      (println "Initial Parameters:")
+      (println initial-sizing))
+    {:status status :headers headers 
+     :body (json/write-str initial-sizing)}))
 
 ;; Server setup
 (defn start-server [port amps vrbs]
@@ -108,6 +121,8 @@
                                           (on-sim-req amp params vrbs))
                                     (GET (str "/rng/" id) {} 
                                          (on-rng-req amp vrbs))
+                                    (GET (str "/init/" id) {} 
+                                         (on-init-req amp vrbs))
                                     (GET (str "/params/" id) {} 
                                          (on-param-req amp vrbs))
                                   #_/ ])
