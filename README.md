@@ -62,6 +62,7 @@ $ lein run --tech <TECH> --ckt <CKT> [--sim <SIM>] [--op <OP>] [--port <PORT>]
         --op <OP>           OpAmp ID: 1 - Miller Amplifier
                                       2 - Symmetrical Amplifier
         --port <PORT>       Port, defaults to 8888
+        --verbose           Print debug output
 ```
 
 **NOTE:** At this point only list values are supported. So even if just one
