@@ -34,16 +34,23 @@
    ["-s" "--sim SIM" "Path to store simulation results" 
     :default "/tmp" 
     :validate [#(not (clojure.string/blank? %)) "--sim defaults to /tmp"]]
+   [nil "--verbose" "Print Debug Output"]
    ["-h" "--help"]])
 
 ;; Run simulation and return results
-(defn run-sim [amp sizing]
+(defn run-sim [amp sizing vrbs]
+  (when vrbs
+    (println "Simulating " amp " with")
+    (println sizing))
   (.set amp sizing)
   (.simulate amp)
   (into {} (.getPerformanceValues amp)))
 
 ;; Simulation Request Handler
-(defn on-sim-req [amp params]
+(defn on-sim-req [amp params vrbs]
+  (when vrbs
+    (println "Recevied Simulation Request for " amp ":")
+    (println params))
   (let [headers {"Content-Type" "application/json; charset=utf-8"}
         len (-> params (vals) (first) (count))
         sizing (reduce (fn [m i] 
@@ -51,43 +58,58 @@
                                           (keys params)))
                             m)) [] (range len))
         performances (if (> len 0)
-                       (map (fn [s] (run-sim amp s)) sizing)
-                       [(run-sim amp {})])
+                       (map (fn [s] (run-sim amp s vrbs)) sizing)
+                       [(run-sim amp {} vrbs)])
         results (reduce (fn [l r] (merge-with cons r l))
                         (zipmap (keys (first performances)) (repeat [])) 
                         performances)
         body (json/write-str results)
         status 200]
+    (when vrbs
+      (println "Simulation Results:")
+      (println results)
+      (println "Simulation Response:")
+      (println body))
     {:status status 
      :headers headers 
      :body body}))
 
 ;; Retrieve available parameters
-(defn on-param-req [amp]
-  (let [body {"parameters" (into [] (.getParameterIdentifiers amp))}
+(defn on-param-req [amp vrbs]
+  (when vrbs
+    (println "Recevied Parameter ID Request for " amp ":"))
+  (let [parameter-ids {"parameters" (into [] (.getParameterIdentifiers amp))}
         status 200
         headers {"Content-Type" "application/json; charset=utf-8"}]
+    (when vrbs
+      (println "Parameters:")
+      (println parameter-ids))
     {:status status :headers headers 
-     :body (json/write-str body)}))
+     :body (json/write-str parameter-ids)}))
 
 ;; Retrieve random sizing
-(defn on-rng-req [amp]
+(defn on-rng-req [amp vrbs]
+  (when vrbs
+    (println "Recevied Randomg Parameter Request for " amp ":"))
   (let [random-sizing (into {} (.getRandomValues amp))
-        body (json/write-str random-sizing)
         status 200
         headers {"Content-Type" "application/json; charset=utf-8"}]
-    {:status status :headers headers :body body}))
+    (when vrbs
+      (println "Parameters:")
+      (println random-sizing))
+    {:status status :headers headers 
+     :body (json/write-str random-sizing)}))
 
 ;; Server setup
-(defn start-server [port amps]
+(defn start-server [port amps vrbs]
   (let [route-list (concat (flatten (map (fn [[id amp]] 
                                   [ (POST (str "/sim/" id)  
                                           {params :params}
-                                          (on-sim-req amp params))
+                                          (on-sim-req amp params vrbs))
                                     (GET (str "/rng/" id) {} 
-                                         (on-rng-req amp))
+                                         (on-rng-req amp vrbs))
                                     (GET (str "/params/" id) {} 
-                                         (on-param-req amp))
+                                         (on-param-req amp vrbs))
                                   #_/ ])
                                 amps))
                            [(route/not-found {:status 404 :body "Not found"})])
@@ -116,10 +138,11 @@
         pdk  (get opts :tech)
         sim  (get opts :sim)
         ckt  (get opts :ckt)
+        vrbs (get opts :verbose)
         amps {"op1" (mk-op1 sim pdk ckt)
               "op2" (mk-op2 sim pdk ckt)}
         _ (->> amps (vals) (map #(.start %)) (doall))
-        srvr (start-server port amps)]
+        srvr (start-server port amps vrbs)]
     (println "Server started on Port" port)
     (println "Press ENTER for graceful exit.")
     (read-line)
