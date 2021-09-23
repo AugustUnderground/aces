@@ -91,6 +91,14 @@ To get random and legal sizing parameters send a `GET` request to `rng/op#`:
 $ curl -X GET localhost:XXXX/rng/op1 | jq
 ```
 
+### Initial Sizing
+
+To get a curated initial sizing send a `GET` request to `init/op#`:
+
+```bash
+$ curl -X GET localhost:XXXX/init/op2 | jq
+```
+
 ### Simulation
 
 To simulate the current netlist send an **empty** `POST` request to `sim/op#`:
