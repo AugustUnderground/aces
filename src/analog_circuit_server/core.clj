@@ -42,9 +42,15 @@
   (when vrbs
     (println "Simulating " amp " with")
     (println sizing))
-  (.set amp sizing)
-  (.simulate amp)
-  (into {} (.getPerformanceValues amp)))
+  (let [_ (.set amp sizing)
+        _ (.simulate amp)
+        p (into {} (.getPerformanceValues amp)) ]
+    (when vrbs
+      (println "Results:")
+      (println p))
+    (zipmap (keys p)
+            (map (fn [v] (if (Double/isNaN v) (double 0.0) v))
+                 (vals p)))))
 
 ;; Simulation Request Handler
 (defn on-sim-req [amp params vrbs]
@@ -54,7 +60,7 @@
   (let [headers {"Content-Type" "application/json; charset=utf-8"}
         len (-> params (vals) (first) (count))
         sizing (reduce (fn [m i] 
-                      (cons (into {} (map (fn [p] [p (-> params (get p) (get i))]) 
+                      (cons (into {} (map (fn [p] [p (-> params (get p) (get i) (double))]) 
                                           (keys params)))
                             m)) [] (range len))
         performances (if (> len 0)
