@@ -74,18 +74,21 @@
      :headers headers 
      :body body}))
 
-;; Retrieve available parameters
-(defn on-param-req [amp vrbs]
+;; Retrieve available parameters or performances
+(defn on-p-req [amp p vrbs]
   (when vrbs
-    (println "Recevied Parameter ID Request for " amp ":"))
-  (let [parameter-ids {"parameters" (into [] (.getParameterIdentifiers amp))}
-        status 200
+    (println "Recevied " p " Request for " amp ":"))
+  (let [ids (cond (= p "parameters")
+                    {"parameters" (into [] (.getParameterIdentifiers amp))}
+                  (= p "performances")
+                    {"performances" (into [] (.getPerformanceIdentifiers amp))}
+                  :else {})
+        status (if (empty? ids) 400 200)
         headers {"Content-Type" "application/json; charset=utf-8"}]
     (when vrbs
-      (println "Parameters:")
-      (println parameter-ids))
+      (println ids))
     {:status status :headers headers 
-     :body (json/write-str parameter-ids)}))
+     :body (json/write-str ids)}))
 
 ;; Retrieve random sizing
 (defn on-rng-req [amp vrbs]
@@ -124,7 +127,9 @@
                                     (GET (str "/init/" id) {} 
                                          (on-init-req amp vrbs))
                                     (GET (str "/params/" id) {} 
-                                         (on-param-req amp vrbs))
+                                         (on-p-req amp "parameters" vrbs))
+                                    (GET (str "/perfs/" id) {} 
+                                         (on-p-req amp "performances" vrbs))
                                   #_/ ])
                                 amps))
                            [(route/not-found {:status 404 :body "Not found"})])

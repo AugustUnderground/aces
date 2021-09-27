@@ -83,6 +83,19 @@ To get a list of available parameters send a `GET` request to `params/op#`:
 $ curl -X GET localhost:XXXX/params/op2 | jq
 ```
 
+All of these can be used in a `sim` request body.
+
+### Available Performances
+
+To get a list of available performance parameters send a `GET` request to
+`perfs/op#`:
+
+```bash
+$ curl -X GET localhost:XXXX/perfs/op2 | jq
+```
+
+These are the keys of the return body of a `sim` request.
+
 ### Random Sizing
 
 To get random and legal sizing parameters send a `GET` request to `rng/op#`:
