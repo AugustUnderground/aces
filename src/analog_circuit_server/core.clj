@@ -57,28 +57,33 @@
   (when vrbs
     (println "Recevied Simulation Request for " amp ":")
     (println params))
-  (let [headers {"Content-Type" "application/json; charset=utf-8"}
-        len (-> params (vals) (first) (count))
-        sizing (reduce (fn [m i] 
-                      (cons (into {} (map (fn [p] [p (-> params (get p) (get i) (double))]) 
-                                          (keys params)))
-                            m)) [] (range len))
-        performances (if (> len 0)
-                       (map (fn [s] (run-sim amp s vrbs)) sizing)
-                       [(run-sim amp {} vrbs)])
-        results (reduce (fn [l r] (merge-with cons r l))
-                        (zipmap (keys (first performances)) (repeat [])) 
-                        performances)
-        body (json/write-str results)
-        status 200]
-    (when vrbs
-      (println "Simulation Results:")
-      (println results)
-      (println "Simulation Response:")
-      (println body))
-    {:status status 
-     :headers headers 
-     :body body}))
+
+  (if (or (-> params (keys) (count) (zero?)) (apply = (map count (vals params))))
+    (let [headers {"Content-Type" "application/json; charset=utf-8"}
+          len (-> params (vals) (first) (count))
+          sizing (reduce (fn [m i] 
+                        (cons (into {} (map (fn [p] [p (-> params (get p) (get i) (double))]) 
+                                            (keys params)))
+                              m)) [] (range len))
+          performances (if (> len 0)
+                         (map (fn [s] (run-sim amp s vrbs)) sizing)
+                         [(run-sim amp {} vrbs)])
+          results (reduce (fn [l r] (merge-with cons r l))
+                          (zipmap (keys (first performances)) (repeat [])) 
+                          performances)
+          body (json/write-str results)
+          status 200]
+      (when vrbs
+        (println "Simulation Results:")
+        (println results)
+        (println "Simulation Response:")
+        (println body))
+      {:status status 
+       :headers headers 
+       :body body})
+    {:status 500 
+     :headers {"Content-Type" "text/html"}
+     :body "Parameter lists must be of equal length."}))
 
 ;; Retrieve available parameters or performances
 (defn on-p-req [amp p vrbs]
