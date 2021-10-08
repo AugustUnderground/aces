@@ -1,4 +1,4 @@
-(ns analog-circuit-server.core
+(ns aces.core
   (:require ;[org.httpkit.server :refer [run-server server-stop!]]
             [org.httpkit.server :as hk]
             [compojure.core :refer [GET POST routes]]

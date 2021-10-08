@@ -1,6 +1,6 @@
-(ns analog-circuit-server.core-test
+(ns aces.core-test
   (:require [clojure.test :refer :all]
-            [analog-circuit-server.core :refer :all]))
+            [aces.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
