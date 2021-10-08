@@ -1,3 +1,3 @@
-# Introduction to analog-circuit-server
+# Introduction to aces
 
 TODO: write [great documentation](http://jacobian.org/writing/what-to-write/)

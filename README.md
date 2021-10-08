@@ -1,4 +1,4 @@
-# REST API for Analog Circuit Library
+# REST API for AC²E
 
 REST API for
 [analog-circuit-library](https://gitlab-forschung.reutlingen-university.de/schweikm/analog-circuit-library).
